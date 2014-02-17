@@ -6,12 +6,13 @@
 # === Parameters:
 #
 #   $ensure       - required - up|down
-#   $ipaddress    - optional
-#   $netmask      - optional
+#   $ipaddress    - required
+#   $netmask      - required
 #   $gateway      - optional
 #   $mtu          - optional
 #   $ethtool_opts - optional
 #   $bonding_opts - optional
+#   $vlan         - optional
 #
 # === Actions:
 #
@@ -25,34 +26,36 @@
 #     ipaddress    => '1.2.3.5',
 #     netmask      => '255.255.255.0',
 #     bonding_opts => 'mode=active-backup miimon=100',
+#     vlan         => 'yes'
 #   }
 #
 # === Authors:
 #
-# Mike Arnold <mike@razorsedge.org>
+# arno-b <arno-b@users.noreply.github.com>
 #
 # === Copyright:
 #
-# Copyright (C) 2011 Mike Arnold, unless otherwise noted.
 #
-define network::bond::static (
+#
+define network::bond::vlan (
   $ensure,
-  $ipaddress='',
-  $netmask='',
+  $ipaddress,
+  $netmask,
   $gateway = '',
   $mtu = '',
   $ethtool_opts = '',
-  $bonding_opts = 'miimon=100',
+  $bonding_opts = undef,
   $peerdns = false,
   $dns1 = '',
   $dns2 = '',
-  $domain = ''
+  $domain = '',
+  $vlan = ''
 ) {
   # Validate our regular expressions
   $states = [ '^up$', '^down$' ]
   validate_re($ensure, $states, '$ensure must be either "up" or "down".')
   # Validate our data
-  # if ! is_ip_address($ipaddress) { fail("${ipaddress} is not an IP address.") }
+  if ! is_ip_address($ipaddress) { fail("${ipaddress} is not an IP address.") }
 
   network_if_base { $title:
     ensure       => $ensure,
@@ -68,6 +71,7 @@ define network::bond::static (
     dns1         => $dns1,
     dns2         => $dns2,
     domain       => $domain,
+    vlan         => $vlan,
   }
 
   # Only install "alias bondN bonding" on old OSs that support
@@ -107,4 +111,4 @@ define network::bond::static (
     }
     default: {}
   }
-} # define network::bond::static
+} # define network::bond::vlan
